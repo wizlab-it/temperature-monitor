@@ -55,7 +55,7 @@
 //Known WiFi networks
 const char *WIFI_ACCESSPOINTS[][2] = {
   { "SSID Network 1", "foobar" }, //WiFi network #1
-  { "SSID Network 1", "barfoo" }, //WiFi network #2
+  { "SSID Network 2", "barfoo" }, //WiFi network #2
 };
 
 //Timeout (in seconds) before to give up when trying to connect to a WiFi network

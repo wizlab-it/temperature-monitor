@@ -2,7 +2,7 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240113.003
+ * @version 20240113.004
  */
 
 
@@ -20,13 +20,7 @@ $DBL->query("SET NAMES utf8");
 $payload = file_get_contents("php://input");
 $payloadParsed = json_decode($payload);
 if(!$payloadParsed || !is_object($payloadParsed) || !$payloadParsed->sensorId || !$payloadParsed->temperature || !is_object($payloadParsed->temperature) || !is_numeric($payloadParsed->temperature->celsius)) die("OK");
-
-if(is_object($payloadParsed->temperature)) {
-  $DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature->celsius) . "', rawPayload='" . dbEsc($payload) . "'");
-} else {
-  $DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature) . "', rawPayload='" . dbEsc($payload) . "'");
-}
-
+$DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature->celsius) . "', rawPayload='" . dbEsc($payload) . "'");
 die("OK");
 
 
