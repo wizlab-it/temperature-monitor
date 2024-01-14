@@ -14,6 +14,8 @@ The device supports:
 
 - two sensor IDs supported (selected via a switch)
 
+- optional alerts can be sent via Telegram when the temperature rises above or falls below the allowed range (when online data post is enabled)
+
 The device is battery powered (18650 Li-ion 3.7V battery), but can be powered via any standard 5V USB battery charger, just connecting it to the ESP8266 board.
 
 

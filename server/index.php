@@ -2,7 +2,7 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240113.016
+ * @version 20240114.017
  */
 
 
@@ -50,7 +50,7 @@ echo("<script type='text/javascript'>
       ['Data', " . implode(", ", $sensorsLabel) . "],\n");
 
       $dataset = [];
-      $rs = $DBL->query("SELECT * FROM (SELECT *, DATE_FORMAT(date, '%Y, %m, %d, %H, %i, %s, 0') AS dateParts FROM temperatures ORDER BY date DESC LIMIT 3000) rsTmp ORDER BY date ASC");
+      $rs = $DBL->query("SELECT * FROM (SELECT *, DATE_FORMAT(date, '%Y, %m, %d, %H, %i, %s, 0') AS dateParts FROM temperatures WHERE date>DATE_SUB(NOW(), INTERVAL 10 DAY) ORDER BY date) rsTmp ORDER BY date ASC");
       while($rc = $rs->fetch_object()) {
         $sensorValues = array_fill(0, count(SENSORS), "null");
         $sensorValues[SENSORS[$rc->sensorId]["position"] - 1] = $rc->temperature;
@@ -72,7 +72,7 @@ echo("<script type='text/javascript'>
     echo("]);
 
     var options = {
-      title: 'Temperatures chart',
+      title: 'Temperatures chart (last 10 days)',
       curveType: 'function',
       legend: { position:'bottom', textStyle: { fontSize:12 } },
       vAxis: { format:'#,##0˚C', minValue:0, maxValue:20, textStyle: { fontSize:12 } },
@@ -93,9 +93,9 @@ echo("<script type='text/javascript'>
 
 /*--- Dump raw sernsors data ----------------------------------------------*/
 echo("<hr>
-<h3>Temperatures raw data from sensors</h3>
+<h3>Temperatures raw data from sensors (last 24 hours)</h3>
 <pre>");
-  $rs = $DBL->query("SELECT * FROM temperatures ORDER BY date DESC LIMIT 200");
+  $rs = $DBL->query("SELECT * FROM temperatures WHERE date>DATE_SUB(NOW(), INTERVAL 24 HOUR) ORDER BY date DESC");
   while($rc = $rs->fetch_object()) {
     echo($rc->id . "\t" . $rc->date . "\t" . $rc->sensorId . "\t" . $rc->temperature . "\t" . $rc->rawPayload . "\n");
   }
