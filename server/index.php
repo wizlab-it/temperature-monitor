@@ -2,7 +2,7 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240114.017
+ * @version 20240123.018
  */
 
 
@@ -36,7 +36,8 @@ echo("<html>
 /*--- Builf charts --------------------------------------------------------*/
 $sensorsLabel = $sensorColor = $sensorValuesCounter = [];
 foreach(SENSORS as $sId=>$sParams) {
-  $sensorsLabel[] = "'" . $sParams["name"] . "'";
+  $isLowBattery = $DBL->query("SELECT lowBattery FROM temperatures WHERE sensorId='" . dbEsc($sId) . "' ORDER BY date DESC LIMIT 1")->fetch_object();
+  $sensorsLabel[] = "'" . $sParams["name"] . (($isLowBattery->lowBattery) ? " (low battery)" : "") . "'";
   $sensorsColor[] = "'#" . $sParams["color"] . "'";
   $sensorValuesCounter[$sId] = 0;
 }

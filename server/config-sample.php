@@ -3,7 +3,21 @@
  * @package Temperature Monitor
  * Configuration sample
  * @author WizLab.it
- * @version 20240114.002
+ * @version 20240126.003
+ */
+
+/*
+ * Database structure
+ *
+ * CREATE TABLE `temperatures` (
+ *   `id` int(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+ *   `date` datetime NOT NULL,
+ *   `sensorId` varchar(30) NOT NULL,
+ *   `temperature` decimal(5,2) NOT NULL,
+ *   `lowBattery` tinyint(1) NOT NULL,
+ *   `rawPayload` text NOT NULL
+ * ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+ *
  */
 
 //Database configuration
