@@ -1,7 +1,7 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240125.091
+ * @version 20240201.099
  */
 
 #include <Arduino.h>
@@ -19,9 +19,10 @@
  */
 
 //Temperature sensor
-#define SENSOR_ID_SELECTOR_PIN 12 //GPIO12, D6
+#define SENSOR_ID_SELECTOR_PIN_1 12 //GPIO12, D6
+#define SENSOR_ID_SELECTOR_PIN_2 13 //GPIO13, D7
 #define SENSOR_TEMP_SAMPLE_PIN A0
-#define SENSOR_TEMP_POWER_PIN 13 //GPIO13, D7
+#define SENSOR_TEMP_POWER_PIN 15 //GPIO15, D8
 #define SENSOR_TEMP_SAMPLES 5 //Multiple samples, then calculates average to increase precision
 
 //Low battery sensor
@@ -33,7 +34,6 @@
 #define LED_OFF HIGH //Led is off when the pin is high
 
 //OLED
-#define OLED_POWER_PIN 15 //GPIO15, D8
 #define OLED_ADDRESS 0x3C //OLED I2C Address
 #define OLED_WIDTH 128 //OLED display width, in pixels
 #define OLED_HEIGHT 32 //OLED display height, in pixels
@@ -55,9 +55,8 @@ typedef struct {
  * Global Variables
  */
 
-String SENSOR_ID;
+int8_t SENSOR_ID = 0;
 int8_t WIFI_ACCESSPOINT_ID = -1;
-bool OLED_IS_ACTIVE = false;
 bool WIFI_STATUS = false;
 Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
 
@@ -85,7 +84,10 @@ static const uint8_t BITMAP_WIFI_META[] = { (OLED_WIDTH - 19), 2, 15, 16 }; //x,
  * Setup
  */
 void setup() {
-  if(DEBUG) Serial.begin(115200);
+  if(DEBUG) {
+    Serial.begin(115200);
+    Serial.println("");
+  }
 
   //Sensor pin
   pinMode(SENSOR_TEMP_SAMPLE_PIN, INPUT);
@@ -97,54 +99,44 @@ void setup() {
   pinMode(SENSOR_TEMP_POWER_PIN, OUTPUT);
 
   //Sensor ID
-  pinMode(SENSOR_ID_SELECTOR_PIN, INPUT_PULLUP);
-  if(digitalRead(SENSOR_ID_SELECTOR_PIN) == HIGH) {
-    SENSOR_ID = SENSOR_ID_HIGH;
-  } else {
-    SENSOR_ID = SENSOR_ID_LOW;
-  }
+  pinMode(SENSOR_ID_SELECTOR_PIN_1, INPUT_PULLUP);
+  pinMode(SENSOR_ID_SELECTOR_PIN_2, INPUT_PULLUP);
+  SENSOR_ID = digitalRead(SENSOR_ID_SELECTOR_PIN_1) | (digitalRead(SENSOR_ID_SELECTOR_PIN_2) << 1);
+  if(DEBUG) Serial.printf("Sensor ID: %d\n", SENSOR_ID);
 
   //Led
-  if(LED_ACTIVE) {
+  if(USE_LED) {
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LED_OFF);
   }
 
   //OLED
-  if(OLED_ACTIVE) {
-    pinMode(OLED_POWER_PIN, OUTPUT);
-    digitalWrite(OLED_POWER_PIN, HIGH);
-    delay(500);
-    if(display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
-      OLED_IS_ACTIVE = true;
-      if(DEBUG) Serial.println("OLED activated");
-    } else {
-      if(DEBUG) Serial.println("OLED init failed");
-    }
-    if(OLED_IS_ACTIVE) {
-      //Splash screen
-      display.clearDisplay();
-      delay(250);
-      display.cp437(true); // Use full 256 char 'Code Page 437'
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(WHITE);
-      display.setCursor(35, 0);
-      display.print("Temperature");
-      display.setCursor(48, 10);
-      display.print("monitor");
-      display.setCursor(32, 24);
-      display.print("by WizLab.it");
-      display.display();
-      delay(5000);
-
-      //Standard interface
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setCursor(0, 2);
-      display.print("Temperature:");
-    }
+  if(display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    if(DEBUG) Serial.println(F("OLED activated"));
+  } else {
+    if(DEBUG) Serial.println(F("OLED init failed"));
   }
+  //Splash screen
+  display.clearDisplay();
+  delay(250);
+  display.cp437(true); // Use full 256 char 'Code Page 437'
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(35, 0);
+  display.print(F("Temperature"));
+  display.setCursor(48, 10);
+  display.print(F("monitor"));
+  display.setCursor(32, 24);
+  display.print(F("by WizLab.it"));
+  display.display();
+  delay(5000);
+
+  //Standard interface
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 2);
+  display.print(F("Temperature:"));
 }
 
 /**
@@ -157,18 +149,15 @@ void loop() {
   TemperatureData temperature;
   readTemperature(&temperature);
 
-  //If OLED is active, use it
-  if(OLED_IS_ACTIVE) {
-    //Print temperature
-    display.fillRect(0, 16, 98, 16, BLACK);
-    display.setTextSize(2);
-    display.setCursor(0, 16);
-    display.printf("%4.1f %cC", temperature.celsius, (char)248);
-    display.display();
+  //Print temperature on OLED
+  display.fillRect(0, 16, 98, 16, BLACK);
+  display.setTextSize(2);
+  display.setCursor(0, 16);
+  display.printf("%4.1f %cC", temperature.celsius, (char)248);
+  display.display();
 
-    //Check if battery is low
-    printBitmap(BITMAP_LOW_BATTERY, BITMAP_LOW_BATTERY_META, ((digitalRead(LOWBATTERY_PIN) == HIGH) ? true : false));
-  }
+  //Check if battery is low
+  printBitmap(BITMAP_LOW_BATTERY, BITMAP_LOW_BATTERY_META, ((digitalRead(LOWBATTERY_PIN) == HIGH) ? true : false));
 
   //Post temperature online (if required)
   if(POST_TEMPERATURE_ONLINE) {
@@ -176,33 +165,19 @@ void loop() {
 
     //If connected to WiFi, then show WiFi icon and post temperature
     if(WIFI_STATUS) {
-
-      //Print WiFi icon
-      if(OLED_IS_ACTIVE) {
-        printBitmap(BITMAP_WIFI, BITMAP_WIFI_META, true);
-      }
-
-      //Post temperature
-      postTemperature(&temperature);
+      printBitmap(BITMAP_WIFI, BITMAP_WIFI_META, true); //WiFi icon
+      postTemperature(&temperature); //Post temperature online
     }
   }
 
   //Sleep
   if(USE_DEEP_SLEEP) {
-
     //Turn off WiFi
     if(WIFI_STATUS) {
       WiFi.mode(WIFI_OFF);
       WIFI_STATUS = false;
       if(DEBUG) Serial.printf("WiFi disabled.\n");
-      if(OLED_IS_ACTIVE) {
-        printBitmap(BITMAP_WIFI, BITMAP_WIFI_META, false);
-      }
-    }
-
-    //If oled is active, then wait some time before to go to deep sleep
-    if(OLED_IS_ACTIVE) {
-      delay(2500);
+      printBitmap(BITMAP_WIFI, BITMAP_WIFI_META, false);
     }
 
     //Go to deep sleep
@@ -250,11 +225,11 @@ bool wifiConnect() {
     //Check connection status
     if(WiFi.status() == WL_CONNECTED) {
       if(DEBUG) Serial.printf(" OK (%s)\n", WiFi.localIP().toString().c_str());
-      if(LED_ACTIVE) blinkLed(5);
+      if(USE_LED) blinkLed(5);
       return true;
     } else {
       if(DEBUG) Serial.println(" FAILED");
-      if(LED_ACTIVE) blinkLed(2);
+      if(USE_LED) blinkLed(2);
       delay(1000);
     }
   }
@@ -272,7 +247,7 @@ void readTemperature(TemperatureData* temperature) {
   delay(1000);
 
   //Get ADC temperature samples
-  int temp_analog[SENSOR_TEMP_SAMPLES];
+  long temp_analog[SENSOR_TEMP_SAMPLES];
   for(uint8_t i=0; i<SENSOR_TEMP_SAMPLES; i++) {
     temp_analog[i] = analogRead(SENSOR_TEMP_SAMPLE_PIN);
     delay(50);
@@ -286,7 +261,7 @@ void readTemperature(TemperatureData* temperature) {
     temperature->analog += temp_analog[i];
   }
   temperature->analog /= SENSOR_TEMP_SAMPLES;
-  temperature->voltage = temperature->analog * 3.3 / 1024.0;
+  temperature->voltage = map(temperature->analog, 0, 1024, 0, 3000) / 1000.0;
 
   //Convert analog to resistance
   float temp_ohm = 1023.0 / temperature->analog - 1.0;
@@ -318,7 +293,7 @@ bool postTemperature(TemperatureData* temperature) {
 
     //Build payload
     String httpPayload = String("{") +
-      "\"sensorId\":\"" + SENSOR_ID + "\"," +
+      "\"sensorId\":\"" + String(SENSOR_ID) + "\"," +
       "\"wifi\":\"" + String(WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0]) + "\"," +
       "\"lowbattery\":" + ((digitalRead(LOWBATTERY_PIN) == HIGH) ? "true" : "false") + "," +
       "\"temperature\":{" +
@@ -334,7 +309,7 @@ bool postTemperature(TemperatureData* temperature) {
 
     if(httpCode == HTTP_CODE_OK) {
       if(DEBUG) Serial.printf("HTTP raw payload (%s): %s\n", WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0], httpPayload.c_str());
-      if(LED_ACTIVE) blinkLed(10);
+      if(USE_LED) blinkLed(10);
       return true;
     }
   }
@@ -348,9 +323,9 @@ bool postTemperature(TemperatureData* temperature) {
 void blinkLed(uint8_t numberOfFlash) {
   for(uint8_t i=0; i<numberOfFlash; i++) {
     digitalWrite(LED_PIN, LED_ON);
-    delay(10);
+    delay(20);
     digitalWrite(LED_PIN, LED_OFF);
-    delay(100);
+    delay(250);
   }
 }
 

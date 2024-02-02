@@ -2,7 +2,7 @@
  * @package Temperature Monitor
  * Configuration sample
  * @author WizLab.it
- * @version 20240125.012
+ * @version 20240131.014
  */
 
 
@@ -14,10 +14,7 @@
 #define DEBUG true
 
 //Use built-in led to identify some events
-#define LED_ACTIVE true
-
-//Use OLED display
-#define OLED_ACTIVE true
+#define USE_LED true
 
 //Seconds between samples
 #define SLEEP_DURATION 10
@@ -42,15 +39,6 @@
 #define SENSOR_TEMP_NOMINAL_OHM 10000.0
 #define SENSOR_TEMP_NOMINAL_TEMP 25.0
 #define SENSOR_TEMP_SERIES_OHM 10000.0
-
-//Device ID
-#if(DEBUG == true)
-  #define SENSOR_ID_HIGH "TEMP_DEBUG_1"
-  #define SENSOR_ID_LOW "TEMP_DEBUG_2"
-#else
-  #define SENSOR_ID_HIGH "TEMP_SENSOR_1"
-  #define SENSOR_ID_LOW "TEMP_SENSOR_2"
-#endif
 
 
 /*

@@ -2,7 +2,7 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240123.018
+ * @version 20240201.020
  */
 
 
@@ -37,7 +37,7 @@ echo("<html>
 $sensorsLabel = $sensorColor = $sensorValuesCounter = [];
 foreach(SENSORS as $sId=>$sParams) {
   $isLowBattery = $DBL->query("SELECT lowBattery FROM temperatures WHERE sensorId='" . dbEsc($sId) . "' ORDER BY date DESC LIMIT 1")->fetch_object();
-  $sensorsLabel[] = "'" . $sParams["name"] . (($isLowBattery->lowBattery) ? " (low battery)" : "") . "'";
+  $sensorsLabel[] = "'" . $sParams["name"] . " (" . $sId . ")" . (($isLowBattery->lowBattery) ? " (low battery)" : "") . "'";
   $sensorsColor[] = "'#" . $sParams["color"] . "'";
   $sensorValuesCounter[$sId] = 0;
 }
@@ -51,11 +51,11 @@ echo("<script type='text/javascript'>
       ['Data', " . implode(", ", $sensorsLabel) . "],\n");
 
       $dataset = [];
-      $rs = $DBL->query("SELECT * FROM (SELECT *, DATE_FORMAT(date, '%Y, %m, %d, %H, %i, %s, 0') AS dateParts FROM temperatures WHERE date>DATE_SUB(NOW(), INTERVAL 10 DAY) ORDER BY date) rsTmp ORDER BY date ASC");
+      $rs = $DBL->query("SELECT * FROM (SELECT *, YEAR(date) AS datePartsYear, MONTH(date) AS datePartsMonth, DATE_FORMAT(date, '%d, %H, %i, %s, 0') AS datePartsDayAndTime FROM temperatures WHERE date>DATE_SUB(NOW(), INTERVAL 10 DAY) ORDER BY date) rsTmp ORDER BY date ASC");
       while($rc = $rs->fetch_object()) {
         $sensorValues = array_fill(0, count(SENSORS), "null");
         $sensorValues[SENSORS[$rc->sensorId]["position"] - 1] = $rc->temperature;
-        $dataset[] = "[new Date(" . $rc->dateParts . "), " . implode(", ", $sensorValues) . "]";
+        $dataset[] = "[new Date(" . $rc->datePartsYear . ", " . ($rc->datePartsMonth - 1) . ", " . $rc->datePartsDayAndTime . "), " . implode(", ", $sensorValues) . "]";
         $sensorValuesCounter[$rc->sensorId]++;
       }
 
@@ -64,7 +64,7 @@ echo("<script type='text/javascript'>
         if($sensorValuesCounter[$sId] < 1) {
           $sensorValues = array_fill(0, count(SENSORS), "null");
           $sensorValues[SENSORS[$sId]["position"] - 1] = 0;
-          echo("[new Date(" . date("Y, m, d, H, i, s, 0") . "), " . implode(", ", $sensorValues) . "],\n");
+          echo("[new Date(" . date("Y, ") . (date("m") - 1) . date(", d, H, i, s, 0") . "), " . implode(", ", $sensorValues) . "],\n");
         }
       }
 

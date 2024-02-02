@@ -2,7 +2,7 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240123.008
+ * @version 20240131.011
  */
 
 
@@ -19,7 +19,7 @@ $DBL->query("SET NAMES utf8");
 /*--- Process payload -----------------------------------------------------*/
 $payload = file_get_contents("php://input");
 $payloadParsed = json_decode($payload);
-if(!$payloadParsed || !is_object($payloadParsed) || !$payloadParsed->sensorId || !$payloadParsed->temperature || !is_object($payloadParsed->temperature) || !is_numeric($payloadParsed->temperature->celsius)) die("OK");
+if(!$payloadParsed || !is_object($payloadParsed) || !is_numeric($payloadParsed->sensorId) || !$payloadParsed->temperature || !is_object($payloadParsed->temperature) || !is_numeric($payloadParsed->temperature->celsius)) die("OK");
 
 //Save data
 $DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature->celsius) . "', lowBattery='" . (($payloadParsed->lowbattery) ? "1" : "0") . "', rawPayload='" . dbEsc($payload) . "'");
@@ -27,7 +27,7 @@ $DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($paylo
 //Check if to send alert
 if(SENSORS[$payloadParsed->sensorId]["alert"]) {
   $alertDetails = "Date: " . date("Y-m-d H:i:s") . "\n" .
-    "Sensor ID: " . $payloadParsed->sensorId . "\n" .
+    "Sensor ID: " . SENSORS[$payloadParsed->sensorId]["name"] . " (" . $payloadParsed->sensorId . ")\n" .
     "Temperature: " . $payloadParsed->temperature->celsius . " C\n" .
     "Range: " . SENSORS[$payloadParsed->sensorId]["alert"]["min"] . "-" . SENSORS[$payloadParsed->sensorId]["alert"]["max"] . " C";
   if($payloadParsed->temperature->celsius > SENSORS[$payloadParsed->sensorId]["alert"]["max"]) {
