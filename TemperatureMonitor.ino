@@ -1,7 +1,8 @@
 /**
  * @package Temperature Monitor
  * @author WizLab.it
- * @version 20240201.099
+ * @board Generic ESP8266
+ * @version 20240214.100
  */
 
 #include <Arduino.h>
@@ -261,7 +262,7 @@ void readTemperature(TemperatureData* temperature) {
     temperature->analog += temp_analog[i];
   }
   temperature->analog /= SENSOR_TEMP_SAMPLES;
-  temperature->voltage = map(temperature->analog, 0, 1024, 0, 3000) / 1000.0;
+  temperature->voltage = map(temperature->analog, 10, 1014, 0, 3000) / 1000.0; //Map is 10-1014 due to A/D error
 
   //Convert analog to resistance
   float temp_ohm = 1023.0 / temperature->analog - 1.0;
