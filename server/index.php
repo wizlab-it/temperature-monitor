@@ -26,6 +26,8 @@ echo("<html>
   <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
   <style>
     * { font-family:sans-serif; }
+    .lowBatteryAlerts { text-align:center; }
+      .lowBatteryAlerts div { display:inline-block; margin:10px; padding:10px; background-color:yellow; border-radius:10px; color:red; }
     pre { font-family:mono; font-size:10px; }
   </style>
 </head>
@@ -34,12 +36,13 @@ echo("<html>
 
 
 /*--- Builf charts --------------------------------------------------------*/
-$sensorsLabel = $sensorColor = $sensorValuesCounter = [];
+$sensorsLabel = $sensorColor = $sensorValuesCounter = $sensorsLowBattery = [];
 foreach(SENSORS as $sId=>$sParams) {
   $isLowBattery = $DBL->query("SELECT lowBattery FROM temperatures WHERE sensorId='" . dbEsc($sId) . "' ORDER BY date DESC LIMIT 1")->fetch_object();
-  $sensorsLabel[] = "'" . $sParams["name"] . " (" . $sId . ")" . (($isLowBattery->lowBattery) ? " (low battery)" : "") . "'";
+  $sensorsLabel[] = "'" . $sParams["name"] . " (" . $sId . ")'";
   $sensorsColor[] = "'#" . $sParams["color"] . "'";
   $sensorValuesCounter[$sId] = 0;
+  if($isLowBattery->lowBattery) $sensorsLowBattery[] = $sId;
 }
 
 echo("<script type='text/javascript'>
@@ -90,6 +93,13 @@ echo("<script type='text/javascript'>
 </script>
 
 <div id='temp_chart' style='width:100%; height:600px;'></div>");
+
+//Low battery alerts
+echo("<div class='lowBatteryAlerts'>");
+  foreach($sensorsLowBattery as $sId) {
+    echo("<div>Low battery on <b>" . SENSORS[$sId]["name"] . "</b> (#" . $sId . ")</div>");
+  }
+echo("</div>");
 
 
 /*--- Dump raw sernsors data ----------------------------------------------*/
