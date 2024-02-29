@@ -34,7 +34,6 @@ A sample configuration file is provided (*TemperatureMonitor-Sample.h*): it must
 | **SENSOR_TEMP_NOMINAL_OHM** | NTC sensor nominal value |
 | **SENSOR_TEMP_NOMINAL_TEMP** | NTC sensor nominal temperature |
 | **SENSOR_TEMP_SERIES_OHM** | value of the resistor in series with the NTC sensor |
-| **DEBUG** | if true, debug data is sent over the Serial Monitor |
 | **USE_LED** | if true, the build-in ESP8266 led is used to inform about events (2 blinks: connection to WiFi network failed; 5 blinks: connection to WiFi network succeeded; 10 blinks: sersor data posted online). Set to false to save battery |
 | **SLEEP_DURATION** | how long to sleep between samples (in seconds) |
 | **USE_DEEP_SLEEP** | if true, deep-sleep (extremely low current) is used. To use deep-sleep, the 1-bit dip-switch on ESP8266's **D0** and **RST** pins must be closed. If false, a normal delay is used |

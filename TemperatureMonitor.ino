@@ -2,7 +2,7 @@
  * @package Temperature Monitor
  * @author WizLab.it
  * @board Generic ESP8266
- * @version 20240214.100
+ * @version 20240229.105
  */
 
 #include <Arduino.h>
@@ -10,7 +10,6 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "TemperatureMonitor.h"
 
@@ -85,10 +84,12 @@ static const uint8_t BITMAP_WIFI_META[] = { (OLED_WIDTH - 19), 2, 15, 16 }; //x,
  * Setup
  */
 void setup() {
-  if(DEBUG) {
-    Serial.begin(115200);
-    Serial.println("");
-  }
+  Serial.begin(115200);
+  Serial.println(F("\n\n\n\n\n"));
+  Serial.println(F("************************************************************************"));
+  Serial.println(F("***             ~  Temperature Monitor - by WizLab.it  ~             ***"));
+  Serial.println(F("************************************************************************"));
+  Serial.println(F("[~~~~~] Setup:"));
 
   //Sensor pin
   pinMode(SENSOR_TEMP_SAMPLE_PIN, INPUT);
@@ -103,7 +104,7 @@ void setup() {
   pinMode(SENSOR_ID_SELECTOR_PIN_1, INPUT_PULLUP);
   pinMode(SENSOR_ID_SELECTOR_PIN_2, INPUT_PULLUP);
   SENSOR_ID = digitalRead(SENSOR_ID_SELECTOR_PIN_1) | (digitalRead(SENSOR_ID_SELECTOR_PIN_2) << 1);
-  if(DEBUG) Serial.printf("Sensor ID: %d\n", SENSOR_ID);
+  Serial.printf(" [i] Sensor ID: %d\n", SENSOR_ID);
 
   //Led
   if(USE_LED) {
@@ -113,9 +114,9 @@ void setup() {
 
   //OLED
   if(display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
-    if(DEBUG) Serial.println(F("OLED activated"));
+    Serial.println(F(" [+] OLED activated"));
   } else {
-    if(DEBUG) Serial.println(F("OLED init failed"));
+    Serial.println(F(" [-] OLED init failed"));
   }
   //Splash screen
   display.clearDisplay();
@@ -138,14 +139,16 @@ void setup() {
   display.setTextSize(1);
   display.setCursor(0, 2);
   display.print(F("Temperature:"));
+
+  //Setup completed
+  Serial.println(F("[~~~~~] Setup complete."));
+  Serial.println(F("[~~~~~] Running:"));
 }
 
 /**
  * Loop
  */
 void loop() {
-  if(DEBUG) Serial.print("============================================================================================================\n");
-
   //Read temperature
   TemperatureData temperature;
   readTemperature(&temperature);
@@ -177,15 +180,15 @@ void loop() {
     if(WIFI_STATUS) {
       WiFi.mode(WIFI_OFF);
       WIFI_STATUS = false;
-      if(DEBUG) Serial.printf("WiFi disabled.\n");
+      Serial.printf(" [-] WiFi disabled.\n");
       printBitmap(BITMAP_WIFI, BITMAP_WIFI_META, false);
     }
 
     //Go to deep sleep
-    if(DEBUG) Serial.printf("Going to low power for %ds.\n", SLEEP_DURATION);
+    Serial.printf("[~~~~~] Going to low power for %ds.\n", SLEEP_DURATION);
     ESP.deepSleep(SLEEP_DURATION * 1000000); //deepSleep is in microseconds
   } else {
-    if(DEBUG) Serial.printf("Delay %ds.\n", SLEEP_DURATION);
+    Serial.printf("[~~~~~] Delay %ds.\n", SLEEP_DURATION);
     delay(SLEEP_DURATION * 1000); //delay is in milliseconds
   }
 }
@@ -215,21 +218,21 @@ bool wifiConnect() {
     WiFi.begin(WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0], WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][1]);
 
     //Try to connect
-    if(DEBUG) Serial.printf("Connecting to %s: ", WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0]);
+    Serial.printf(" [*] Connecting to %s: ", WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0]);
     uint8_t i = 0;
     while(WiFi.status() != WL_CONNECTED) {
-      if(DEBUG) Serial.print(".");
+      Serial.print(".");
       if(i++ > WIFI_CONNECTION_TIMEOUT) break;
       delay(1000);
     }
 
     //Check connection status
     if(WiFi.status() == WL_CONNECTED) {
-      if(DEBUG) Serial.printf(" OK (%s)\n", WiFi.localIP().toString().c_str());
+      Serial.printf(" OK (%s)\n", WiFi.localIP().toString().c_str());
       if(USE_LED) blinkLed(5);
       return true;
     } else {
-      if(DEBUG) Serial.println(" FAILED");
+      Serial.println(" failed");
       if(USE_LED) blinkLed(2);
       delay(1000);
     }
@@ -276,7 +279,7 @@ void readTemperature(TemperatureData* temperature) {
   temperature->celsius = 1.0 / temperature->celsius;
   temperature->celsius -= 273.15;
 
-  if(DEBUG) Serial.printf("Analog: %0.2f - Voltage: %0.3f V - Temperature: %0.3f °C\n", temperature->analog, temperature->voltage, temperature->celsius);
+  Serial.printf(" [i] Analog: %0.2f - Voltage: %0.3f V - Temperature: %0.3f °C\n", temperature->analog, temperature->voltage, temperature->celsius);
 }
 
 /**
@@ -309,12 +312,14 @@ bool postTemperature(TemperatureData* temperature) {
     httpsClient.end();
 
     if(httpCode == HTTP_CODE_OK) {
-      if(DEBUG) Serial.printf("HTTP raw payload (%s): %s\n", WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0], httpPayload.c_str());
+      //Serial.printf("HTTP raw payload (%s): %s\n", WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0], httpPayload.c_str());
+      Serial.printf(" [+] Temperature posted online successfully: %0.2f °C\n", temperature->celsius);
       if(USE_LED) blinkLed(10);
       return true;
     }
   }
 
+  Serial.println(" [-] Error posting temperature online");
   return false;
 }
 

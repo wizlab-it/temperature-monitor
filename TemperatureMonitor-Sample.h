@@ -2,16 +2,13 @@
  * @package Temperature Monitor
  * Configuration sample
  * @author WizLab.it
- * @version 20240131.014
+ * @version 20240226.015
  */
 
 
 /*
  * Generic behaviour
  */
-
-//If debug is active, logs are sent to the Serial Monitor and the Sensor ID is set using the debug names
-#define DEBUG true
 
 //Use built-in led to identify some events
 #define USE_LED true
