@@ -42,7 +42,7 @@ foreach(SENSORS as $sId=>$sParams) {
   $sensorsLabel[] = "'" . $sParams["name"] . " (" . $sId . ")'";
   $sensorsColor[] = "'#" . $sParams["color"] . "'";
   $sensorValuesCounter[$sId] = 0;
-  if($isLowBattery->lowBattery) $sensorsLowBattery[] = $sId;
+  if($isLowBattery?->lowBattery) $sensorsLowBattery[] = $sId;
 }
 
 echo("<script type='text/javascript'>

@@ -22,7 +22,7 @@ $payloadParsed = json_decode($payload);
 if(!$payloadParsed || !is_object($payloadParsed) || !is_numeric($payloadParsed->sensorId) || !$payloadParsed->temperature || !is_object($payloadParsed->temperature) || !is_numeric($payloadParsed->temperature->celsius)) die("OK");
 
 //Save data
-$DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature->celsius) . "', lowBattery='" . (($payloadParsed->lowbattery) ? "1" : "0") . "', rawPayload='" . dbEsc($payload) . "'");
+$DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature->celsius) . "', lowBattery='" . (($payloadParsed?->lowbattery) ? "1" : "0") . "', rawPayload='" . dbEsc($payload) . "'");
 
 //Check if to send alert
 if(SENSORS[$payloadParsed->sensorId]["alert"]) {
