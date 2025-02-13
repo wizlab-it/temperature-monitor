@@ -11,7 +11,7 @@
 #include <WiFiClientSecureBearSSL.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
-#include "TemperatureMonitor.h"
+#include "TemperatureMonitor-NTC.h"
 
 
 /**
@@ -298,6 +298,7 @@ bool postTemperature(TemperatureData* temperature) {
     //Build payload
     String httpPayload = String("{") +
       "\"sensorId\":\"" + String(SENSOR_ID) + "\"," +
+      "\"sensorType\":\"NTC\"," +
       "\"wifi\":\"" + String(WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0]) + "\"," +
       "\"lowbattery\":" + ((digitalRead(LOWBATTERY_PIN) == HIGH) ? "true" : "false") + "," +
       "\"temperature\":{" +

@@ -2,7 +2,7 @@
 
 The device can be used to monitor the environmental temperature, and optionally post the values online for remote monitoring and/or show them on a OLED display in real time.
 
-The circuit is based on an NTC temperature sensor and the ESP8266 board (Arduino like), that handles the temperature sampling (via A/D conversion), network communication via WiFi, and drives the OLED display.
+The circuit is based on a temperature sensor (NTC or DS18B20) and the ESP8266 board (Arduino like), that handles the temperature sampling, network communication via WiFi, and drives the OLED display.
 
 The server-side code (PHP) is also provided, to receive the data from the board and show it in a chart (via Google charts).
 
@@ -14,7 +14,7 @@ The device is battery powered (18650 Li-ion 3.7V battery), but can be powered vi
 
 - Multiple WiFi networks support: it loops through all of them, connecting to the first available
 
-- Fine tuning via trimmer
+- Fine tuning via trimmer (NTC version)
 
 - Four sensor IDs supported, selectable via a 2-bit dip-switch (Sensor ID from 0 to 3)
 
@@ -30,10 +30,10 @@ A sample configuration file is provided (*TemperatureMonitor-Sample.h*): it must
 
 | Parameter | Description |
 | --------- | ----------- |
-| **SENSOR_TEMP_BETA** | NTC sensor beta value |
-| **SENSOR_TEMP_NOMINAL_OHM** | NTC sensor nominal value |
-| **SENSOR_TEMP_NOMINAL_TEMP** | NTC sensor nominal temperature |
-| **SENSOR_TEMP_SERIES_OHM** | value of the resistor in series with the NTC sensor |
+| **SENSOR_TEMP_BETA** | NTC sensor beta value (only for NTC version) |
+| **SENSOR_TEMP_NOMINAL_OHM** | NTC sensor nominal value (only for NTC version) |
+| **SENSOR_TEMP_NOMINAL_TEMP** | NTC sensor nominal temperature (only for NTC version) |
+| **SENSOR_TEMP_SERIES_OHM** | value of the resistor in series with the NTC sensor (only for NTC version) |
 | **USE_LED** | if true, the build-in ESP8266 led is used to inform about events (2 blinks: connection to WiFi network failed; 5 blinks: connection to WiFi network succeeded; 10 blinks: sersor data posted online). Set to false to save battery |
 | **SLEEP_DURATION** | how long to sleep between samples (in seconds) |
 | **USE_DEEP_SLEEP** | if true, deep-sleep (extremely low current) is used. To use deep-sleep, the 1-bit dip-switch on ESP8266's **D0** and **RST** pins must be closed. If false, a normal delay is used |

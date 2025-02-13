@@ -25,7 +25,7 @@ if(!$payloadParsed || !is_object($payloadParsed) || !is_numeric($payloadParsed->
 $DBL->query("INSERT INTO temperatures SET date=NOW(), sensorId='" . dbEsc($payloadParsed->sensorId) . "', temperature='" . dbEsc($payloadParsed->temperature->celsius) . "', lowBattery='" . (($payloadParsed?->lowbattery) ? "1" : "0") . "', rawPayload='" . dbEsc($payload) . "'");
 
 //Check if to send alert
-if(SENSORS[$payloadParsed->sensorId]["alert"]) {
+if(@SENSORS[$payloadParsed->sensorId]["alert"]) {
   $alertDetails = "Date: " . date("Y-m-d H:i:s") . "\n" .
     "Sensor ID: " . SENSORS[$payloadParsed->sensorId]["name"] . " (" . $payloadParsed->sensorId . ")\n" .
     "Temperature: " . $payloadParsed->temperature->celsius . " C\n" .

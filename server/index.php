@@ -39,7 +39,7 @@ echo("<html>
 $sensorsLabel = $sensorColor = $sensorValuesCounter = $sensorsLowBattery = [];
 foreach(SENSORS as $sId=>$sParams) {
   $isLowBattery = $DBL->query("SELECT lowBattery FROM temperatures WHERE sensorId='" . dbEsc($sId) . "' ORDER BY date DESC LIMIT 1")->fetch_object();
-  $sensorsLabel[] = "'" . $sParams["name"] . " (ID:" . $sId . (($sParams["alert"]) ? ", Alarm:" . $sParams["alert"]["min"] . "-" . $sParams["alert"]["max"] . "°C" : "") . ")'";
+  $sensorsLabel[] = "'" . $sParams["name"] . " (ID:" . $sId . ((@$sParams["alert"]) ? ", Alarm:" . $sParams["alert"]["min"] . "-" . $sParams["alert"]["max"] . "°C" : "") . ")'";
   $sensorsColor[] = "'#" . $sParams["color"] . "'";
   $sensorValuesCounter[$sId] = 0;
   if($isLowBattery?->lowBattery) $sensorsLowBattery[] = $sId;
