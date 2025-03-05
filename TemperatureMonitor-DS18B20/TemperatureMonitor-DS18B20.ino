@@ -2,7 +2,7 @@
  * @package Temperature Monitor
  * @author WizLab.it
  * @board Generic ESP8266
- * @version 20250129.120
+ * @version 20250305.122
  */
 
 #include <Arduino.h>
@@ -25,8 +25,9 @@
 #define SENSOR_ID_SELECTOR_PIN_2 13 //GPIO13, D7
 #define SENSOR_TEMP_SAMPLE_PIN 2 //GPIO2, D4
 
-//Low battery sensor
-#define LOWBATTERY_PIN 14 //GPIO14, D5
+//Low-battery
+#define LOWBATTERY_PIN            A0
+#define LOWBATTERY_LEVEL          3.6
 
 //LED
 #define LED_PIN 2 //GPIO2, D4
@@ -50,6 +51,7 @@ typedef struct {
   uint8_t resolution = 0;
   int16_t raw = 0;
   float celsius = 0.0;
+  float batteryVoltage = 0.0;
 } TemperatureData;
 
 
@@ -162,7 +164,10 @@ void loop() {
   display.display();
 
   //Check if battery is low
-  printBitmap(BITMAP_LOW_BATTERY, BITMAP_LOW_BATTERY_META, ((digitalRead(LOWBATTERY_PIN) == HIGH) ? true : false));
+  long batteryVoltageRaw = analogRead(LOWBATTERY_PIN);
+  temperature.batteryVoltage = (map(batteryVoltageRaw, 0, 1023, 0, 3100) / 1000.0) * 2.0; //Map is 0-1023 to 0-3.1V; voltage is doubled because of the voltage divider
+  printBitmap(BITMAP_LOW_BATTERY, BITMAP_LOW_BATTERY_META, ((temperature.batteryVoltage < LOWBATTERY_LEVEL) ? true : false));
+  Serial.printf(" [i] Battery voltage: %0.3f V\n", temperature.batteryVoltage);
 
   //Post temperature online (if required)
   if(POST_TEMPERATURE_ONLINE) {
@@ -279,12 +284,18 @@ bool postTemperature(TemperatureData* temperature) {
   if(httpsClient.begin(*wifiClient, HTTPS_TEMP_ENDPOINT)) {
     httpsClient.addHeader("Content-Type", "application/json");
 
+
+
+
+
+
     //Build payload
     String httpPayload = String("{") +
       "\"sensorId\":\"" + String(SENSOR_ID) + "\"," +
       "\"sensorType\":\"DS18B20\"," +
       "\"wifi\":\"" + String(WIFI_ACCESSPOINTS[WIFI_ACCESSPOINT_ID][0]) + "\"," +
-      "\"lowbattery\":" + ((digitalRead(LOWBATTERY_PIN) == HIGH) ? "true" : "false") + "," +
+      "\"batteryVoltage\":\"" + String(temperature->batteryVoltage) + "\"," +
+      "\"lowbattery\":" + ((temperature->batteryVoltage < LOWBATTERY_LEVEL) ? "true" : "false") + "," +
       "\"temperature\":{" +
         "\"address\":\"" + String(temperature->addressString) + "\"," +
         "\"resolution\":\"" + String(temperature->resolution) + "\"," +
