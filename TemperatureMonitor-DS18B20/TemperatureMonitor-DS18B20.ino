@@ -2,7 +2,7 @@
  * @package Temperature Monitor
  * @author WizLab.it
  * @board Generic ESP8266
- * @version 20250305.122
+ * @version 20250312.125
  */
 
 #include <Arduino.h>
@@ -283,11 +283,6 @@ bool postTemperature(TemperatureData* temperature) {
   HTTPClient httpsClient;
   if(httpsClient.begin(*wifiClient, HTTPS_TEMP_ENDPOINT)) {
     httpsClient.addHeader("Content-Type", "application/json");
-
-
-
-
-
 
     //Build payload
     String httpPayload = String("{") +
